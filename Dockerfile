@@ -1,17 +1,18 @@
-# Use the official Nginx image
+# Gunakan image Nginx resmi versi ringan
 FROM nginx:alpine
 
-# Remove the default static assets
+# Hapus file HTML default dari Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy your HTML file into the Nginx html directory
+# Salin semua file HTML ke direktori Nginx
 COPY login.html /usr/share/nginx/html/index.html
+COPY produk.html Transaksi.html user-orders.html /usr/share/nginx/html/
 
-# Expose port (Cloud Run expects the container to listen on 8080)
+# Buka port 8080 (untuk Cloud Run atau container lain)
 EXPOSE 8080
 
-# Change Nginx to listen on port 8080 (Cloud Run requirement)
+# Ubah konfigurasi default Nginx agar menggunakan port 8080
 RUN sed -i 's/80;/8080;/g' /etc/nginx/conf.d/default.conf
 
-# Start Nginx
+# Jalankan Nginx
 CMD ["nginx", "-g", "daemon off;"]
