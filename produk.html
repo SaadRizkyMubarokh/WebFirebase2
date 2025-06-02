@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Penjualan Produk</title>
+    <script>
+        // ==== Pemeriksaan Autentikasi ====
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        // ===================================
+    </script>
+    <style>
+        /* CSS Anda yang sudah ada dari produkX.html */
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.6em;
+        }
+
+        .hamburger-menu {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #f5f5f5;
+            margin: 5px 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.is-active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-menu.is-active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.is-active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        header nav {
+            display: flex;
+        }
+
+        header nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        header nav ul li {
+            margin-left: 20px;
+        }
+
+        header nav ul li a {
+            color: #f5f5f5;
+            text-decoration: none;
+            font-size: 0.95em;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header nav ul li a:hover,
+        header nav ul li a.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            flex: 1;
+        }
+
+        .summary-cards-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            min-width: 220px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .summary-card h3 {
+            font-size: 1.1em;
+            color: #bb86fc;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .summary-card p {
+            font-size: 1.6em;
+            color: #e0e0e0;
+            margin: 0;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
+
+        .summary-card .small-text {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            flex: 1 1 calc(50% - 15px);
+            min-width: 280px;
+            max-width: 45%;
+            height: 300px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container h2 {
+            font-size: 1em;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #f5f5f5;
+        }
+
+        .chart-container canvas {
+            flex: 1;
+            max-height: 240px;
+        }
+
+        .charts-row-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: stretch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        td {
+            color: #c7c7c7;
+        }
+
+        .main-content>h1,
+        .main-content>h2.section-title {
+            color: #f5f5f5;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-content>h2.section-title {
+            text-align: left;
+            font-size: 1.2em;
+            margin-top: 30px;
+        }
+
+        #loadingMessage p,
+        #errorMessage p {
+            color: #f0f0f0;
+            text-align: center;
+        }
+
+        #aggregatedTableContainer p {
+            color: #f0f0f0;
+        }
+
+        #logoutButton {
+            background-color: #f44336;
+            /* Warna merah untuk logout */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            margin-left: 40%;
+            margin-right: 40%;
+            margin-bottom: 40px;
+            margin-top: 10px;
+
+
+        }
+
+        #logoutButton:hover {
+            background-color: #d32f2f;
+        }
+
+        /* CSS for Delete Button */
+        .delete-btn {
+            background-color: #f44336; /* Red */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f; /* Darker red */
+        }
+
+
+        footer {
+            background-color: #1e1e1e;
+            color: #aaa;
+            text-align: center;
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
+            margin-top: auto;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 992px) {
+            .summary-card {
+                min-width: 200px;
+            }
+
+            .charts-row-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .chart-container {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.2em;
+                /* Lebih kecil agar ada ruang untuk hamburger & logout */
+            }
+
+            header {
+                flex-wrap: wrap;
+                /* Agar tombol logout bisa turun jika perlu */
+            }
+
+            .hamburger-menu {
+                display: block;
+                order: 3;
+                /* Urutan hamburger */
+            }
+
+            #logoutButton {
+                order: 2;
+                /* Urutan tombol logout */
+                margin-left: 10px;
+                /* Jarak dari judul */
+            }
+
+            header nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: #1e1e1e;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                border-top: 1px solid #333;
+                order: 4;
+                /* Urutan nav menu */
+                margin-top: 5px;
+                /* Beri jarak jika header wrap */
+            }
+
+            header nav.mobile-menu-open {
+                display: flex;
+            }
+
+            header nav ul {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            header nav ul li {
+                margin-left: 0;
+                text-align: center;
+                border-bottom: 1px solid #333;
+            }
+
+            header nav ul li:last-child {
+                border-bottom: none;
+            }
+
+            header nav ul li a {
+                display: block;
+                padding: 15px;
+                font-size: 1em;
+            }
+
+            header nav ul li a:hover,
+            header nav ul li a.active {
+                background-color: #444;
+            }
+
+            .summary-card {
+                flex-basis: calc(50% - 10px);
+                min-width: unset;
+            }
+        }
+
+        @media (max-width: 520px) {
+            header h1 {
+                font-size: 1.1em;
+                margin-bottom: 5px;
+                /* Jika tombol logout turun */
+            }
+
+            header {
+                justify-content: space-around;
+                /* Atur alignment jika wrap */
+            }
+
+            .summary-card {
+                flex-basis: 100%;
+                margin-bottom: 15px;
+            }
+
+            .summary-card:last-child {
+                margin-bottom: 0;
+            }
+
+            .summary-card p {
+                font-size: 1.4em;
+            }
+
+            .chart-container {
+                height: 250px;
+                padding: 10px;
+            }
+
+            .chart-container h2 {
+                font-size: 0.9em;
+            }
+
+            footer p {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Dasbor Analisis Produk</h1>
+
+        <nav id="mainNav">
+            <ul>
+                <li><a href="produk.html" id="menuPenjualan">Penjualan</a></li>
+                <li><a href="Transaksi.html" id="menuTransaksi">Transaksi</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <h1>Analisis Penjualan Produk</h1>
+        <div id="loadingMessage">
+            <p>Memuat dan menganalisis data pesanan...</p>
+        </div>
+        <div id="errorMessage" style="display:none;">
+            <p>Gagal memuat data. Silakan cek konsol.</p>
+        </div>
+
+        <div class="summary-cards-container">
+            <div class="summary-card">
+                <h3>Produk Paling Laris</h3>
+                <p id="mostSoldProductValue">-</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Pendapatan</h3>
+                <p id="totalRevenueValue">Rp 0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Item Terjual</h3>
+                <p id="totalQuantityValue">0</p>
+            </div>
+        </div>
+
+        <div class="charts-row-container">
+            <div class="chart-container">
+                <h2>Grafik Total Kuantitas</h2>
+                <canvas id="quantityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h2>Grafik Total Pendapatan</h2>
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+
+        <h2 class="section-title">Data Agregat per Menu</h2>
+        <div id="aggregatedTableContainer"></div>
+    </div>
+
+    <button id="logoutButton">Logout</button> <button class="hamburger-menu" aria-label="Toggle menu"
+        aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <footer>
+        <p>&copy; <span id="currentYearFooter">2024</span> Analisis Produk KevLev. Hak Cipta Dilindungi.</p>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        // ==== Pemeriksaan Autentikasi (ulangi di sini jika skrip head tidak cukup) ====
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        } else {
+            // SELURUH LOGIKA JavaScript produkX.html YANG SUDAH ADA MASUK KE SINI
+            document.addEventListener('DOMContentLoaded', () => {
+                const hamburgerButton = document.querySelector('.hamburger-menu');
+                const mainNav = document.getElementById('mainNav');
+                const logoutButton = document.getElementById('logoutButton');
+
+                if (hamburgerButton && mainNav) {
+                    hamburgerButton.addEventListener('click', () => {
+                        mainNav.classList.toggle('mobile-menu-open');
+                        const isExpanded = mainNav.classList.contains('mobile-menu-open');
+                        hamburgerButton.setAttribute('aria-expanded', isExpanded);
+                        hamburgerButton.classList.toggle('is-active');
+                    });
+                }
+
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', () => {
+                        sessionStorage.removeItem('isLoggedIn');
+                        window.location.href = 'login.html';
+                    });
+                }
+
+                const currentYearSpan = document.getElementById("currentYearFooter");
+                if (currentYearSpan) {
+                    currentYearSpan.textContent = new Date().getFullYear();
+                }
+            });
+
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyB7lVEbglO96ZjO-fYIqHcIlblaXHHx7eE", // GANTI DENGAN KONFIGURASI ANDA
+                authDomain: "kevlev.firebaseapp.com",
+                databaseURL: "https://kevlev-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "kevlev",
+                storageBucket: "kevlev.firebasestorage.app",
+                messagingSenderId: "229462752783",
+                appId: "1:229462752783:web:0dca277aa84e098a402d7a",
+                measurementId: "G-5E2GC9Q9D7"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            const adminOrdersRef = database.ref('Admin/ProductOrder');
+
+            const loadingMessageDiv = document.getElementById('loadingMessage');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const aggregatedTableContainerDiv = document.getElementById('aggregatedTableContainer');
+
+            const mostSoldProductValueEl = document.getElementById('mostSoldProductValue');
+            const totalRevenueValueEl = document.getElementById('totalRevenueValue');
+            const totalQuantityValueEl = document.getElementById('totalQuantityValue');
+
+            function parsePrice(priceString) {
+                if (typeof priceString === 'string') {
+                    return parseInt(priceString.replace(/\./g, ''), 10) || 0;
+                }
+                return typeof priceString === 'number' ? priceString : 0;
+            }
+
+            function parseCount(countString) {
+                return parseInt(countString, 10) || 0;
+            }
+
+            let quantityChartInstance;
+            let priceChartInstance;
+
+            const chartTextColor = '#e0e0e0';
+            const chartGridColor = '#444';
+
+            // Function to delete product data from Firebase
+            async function deleteProductFromFirebase(menuTitleToDelete) {
+                const confirmation = window.confirm(`Apakah Anda yakin ingin menghapus semua data untuk produk "${menuTitleToDelete}"? Tindakan ini tidak dapat diurungkan.`);
+                if (!confirmation) {
+                    console.log('Penghapusan dibatalkan oleh pengguna.');
+                    return;
+                }
+
+                if (loadingMessageDiv) {
+                    loadingMessageDiv.innerHTML = `<p>Menghapus produk ${menuTitleToDelete}...</p>`;
+                    loadingMessageDiv.style.display = 'block';
+                }
+                if (errorMessageDiv) errorMessageDiv.style.display = 'none';
+
+                const updates = {};
+                let pathsToDeleteFound = false;
+
+                try {
+                    const snapshot = await adminOrdersRef.once('value');
+                    if (snapshot.exists()) {
+                        const allUsersOrders = snapshot.val();
+                        for (const userEmailKey in allUsersOrders) {
+                            const userOrders = allUsersOrders[userEmailKey];
+                            for (const orderNameKey in userOrders) {
+                                const orderData = userOrders[orderNameKey];
+                                if (orderData) { // Ensure orderData is not null
+                                    for (const itemKey in orderData) {
+                                        // Check if orderData[itemKey] is an object and has a title property matching the one to delete
+                                        if (itemKey !== "Info" && 
+                                            typeof orderData[itemKey] === 'object' && 
+                                            orderData[itemKey] !== null && 
+                                            orderData[itemKey].title === menuTitleToDelete) {
+                                            const path = `Admin/ProductOrder/${userEmailKey}/${orderNameKey}/${itemKey}`;
+                                            updates[path] = null;
+                                            pathsToDeleteFound = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (pathsToDeleteFound) {
+                        await database.ref().update(updates);
+                        console.log(`Semua entri untuk produk "${menuTitleToDelete}" telah berhasil dihapus.`);
+                        if (loadingMessageDiv) {
+                            // This message will be shown briefly until the on('value') listener refreshes the UI
+                            loadingMessageDiv.innerHTML = `<p>Produk "${menuTitleToDelete}" berhasil dihapus. Data sedang dimuat ulang...</p>`;
+                        }
+                        // The adminOrdersRef.on('value', ...) listener will automatically refresh the table and other UI elements.
+                    } else {
+                        console.log(`Tidak ada entri yang ditemukan untuk produk "${menuTitleToDelete}".`);
+                        alert(`Tidak ada data yang ditemukan untuk produk "${menuTitleToDelete}".`);
+                        if (loadingMessageDiv) loadingMessageDiv.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error(`Gagal menghapus produk "${menuTitleToDelete}":`, error);
+                    if (errorMessageDiv) {
+                        errorMessageDiv.querySelector('p').textContent = `Gagal menghapus produk. Detail: ${error.message}`;
+                        errorMessageDiv.style.display = 'block';
+                    }
+                    if (loadingMessageDiv) loadingMessageDiv.style.display = 'none';
+                }
+            }
+
+            // Event listener for delete buttons (using event delegation)
+            if (aggregatedTableContainerDiv) {
+                aggregatedTableContainerDiv.addEventListener('click', function(event) {
+                    if (event.target && event.target.classList.contains('delete-btn')) {
+                        const menuTitle = event.target.dataset.menuTitle;
+                        if (menuTitle) {
+                            deleteProductFromFirebase(menuTitle);
+                        }
+                    }
+                });
+            }
+
+
+            adminOrdersRef.on('value',
+                (snapshot) => {
+                    loadingMessageDiv.style.display = 'none';
+                    errorMessageDiv.style.display = 'none';
+                    aggregatedTableContainerDiv.innerHTML = '';
+
+                    let aggregatedData = {};
+                    let mostSoldProductName = '-';
+                    let highestQuantity = 0;
+                    let totalRevenueAllProducts = 0;
+                    let totalQuantityAllProducts = 0;
+
+                    if (snapshot.exists()) {
+                        const allUsersOrders = snapshot.val();
+                        for (const userEmailKey in allUsersOrders) {
+                            const userOrders = allUsersOrders[userEmailKey];
+                            for (const orderNameKey in userOrders) {
+                                const orderData = userOrders[orderNameKey];
+                                if (orderData) {
+                                    for (const itemKey in orderData) {
+                                        if (itemKey !== "Info") {
+                                            const item = orderData[itemKey];
+                                             // Ensure item is valid and has title, count, totalPrice
+                                            if (item && typeof item.title !== 'undefined' && 
+                                                typeof item.count !== 'undefined' && 
+                                                typeof item.totalPrice !== 'undefined') {
+                                                
+                                                const title = item.title;
+                                                const count = parseCount(item.count);
+                                                const totalPriceForItemInOrder = parsePrice(item.totalPrice);
+
+                                                if (title) { // Ensure title is not empty or null
+                                                    if (!aggregatedData[title]) {
+                                                        aggregatedData[title] = {
+                                                            totalQuantity: 0,
+                                                            grandTotalPrice: 0
+                                                        };
+                                                    }
+                                                    aggregatedData[title].totalQuantity += count;
+                                                    aggregatedData[title].grandTotalPrice += totalPriceForItemInOrder;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (Object.keys(aggregatedData).length > 0) {
+                            for (const menuTitle in aggregatedData) {
+                                const data = aggregatedData[menuTitle];
+                                if (data.totalQuantity > highestQuantity) {
+                                    highestQuantity = data.totalQuantity;
+                                    mostSoldProductName = menuTitle;
+                                }
+                                totalRevenueAllProducts += data.grandTotalPrice;
+                                totalQuantityAllProducts += data.totalQuantity;
+                            }
+                        }
+                    }
+
+                    if (mostSoldProductValueEl) mostSoldProductValueEl.textContent = mostSoldProductName;
+                    if (totalRevenueValueEl) totalRevenueValueEl.textContent = `Rp ${totalRevenueAllProducts.toLocaleString('id-ID')}`;
+                    if (totalQuantityValueEl) totalQuantityValueEl.textContent = totalQuantityAllProducts.toLocaleString('id-ID');
+
+                    const chartLabels = [];
+                    const chartQuantities = [];
+                    const chartTotalPrices = [];
+
+                    const quantityCanvas = document.getElementById('quantityChart');
+                    const priceCanvas = document.getElementById('priceChart');
+
+                    if (Object.keys(aggregatedData).length > 0) {
+                        if (quantityCanvas) quantityCanvas.style.display = 'block';
+                        if (priceCanvas) priceCanvas.style.display = 'block';
+                        if (document.querySelector('.charts-row-container')) document.querySelector('.charts-row-container').style.display = 'flex';
+
+                        const sortedAggregatedData = Object.entries(aggregatedData)
+                            .sort(([, a], [, b]) => b.totalQuantity - a.totalQuantity)
+                            .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+
+                        // Modified Table HTML generation to include Delete button
+                        let tableHTML = '<table><thead><tr><th>Nama Menu</th><th>Total Kuantitas Terjual</th><th>Total Pendapatan</th><th>Aksi</th></tr></thead><tbody>';
+                        for (const menuTitle in sortedAggregatedData) {
+                            const data = sortedAggregatedData[menuTitle];
+                            chartLabels.push(menuTitle);
+                            chartQuantities.push(data.totalQuantity);
+                            chartTotalPrices.push(data.grandTotalPrice);
+
+                            tableHTML += `<tr>
+                                <td>${menuTitle}</td>
+                                <td>${data.totalQuantity.toLocaleString('id-ID')}</td>
+                                <td>Rp ${data.grandTotalPrice.toLocaleString('id-ID')}</td>
+                                <td><button class="delete-btn" data-menu-title="${menuTitle}">Hapus</button></td>
+                            </tr>`;
+                        }
+                        tableHTML += '</tbody></table>';
+                        aggregatedTableContainerDiv.innerHTML = tableHTML;
+
+
+                        const qtyCtx = quantityCanvas.getContext('2d');
+                        if (quantityChartInstance) quantityChartInstance.destroy();
+                        quantityChartInstance = new Chart(qtyCtx, { 
+                            type: 'bar',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [{
+                                    label: 'Total Kuantitas Terjual',
+                                    data: chartQuantities,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false, labels: { color: chartTextColor } } },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: { display: true, text: 'Kuantitas', font: { size: 11 }, color: chartTextColor },
+                                        ticks: { font: { size: 10 }, color: chartTextColor, callback: function (value) { return Number.isInteger(value) ? value : null; } },
+                                        grid: { color: chartGridColor }
+                                    },
+                                    x: {
+                                        ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 30, autoSkip: chartLabels.length > 10, color: chartTextColor },
+                                        grid: { color: chartGridColor }
+                                    }
+                                }
+                            }
+                        });
+
+                        const priceCtx = priceCanvas.getContext('2d');
+                        if (priceChartInstance) priceChartInstance.destroy();
+                        priceChartInstance = new Chart(priceCtx, { 
+                            type: 'bar',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [{
+                                    label: 'Total Pendapatan (Rp)',
+                                    data: chartTotalPrices,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false, labels: { color: chartTextColor } } },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: { display: true, text: 'Pendapatan (Rp)', font: { size: 11 }, color: chartTextColor },
+                                        ticks: { font: { size: 10 }, color: chartTextColor, callback: function (value) { return 'Rp ' + value.toLocaleString('id-ID'); } },
+                                        grid: { color: chartGridColor }
+                                    },
+                                    x: {
+                                        ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 30, autoSkip: chartLabels.length > 10, color: chartTextColor },
+                                        grid: { color: chartGridColor }
+                                    }
+                                }
+                            }
+                        });
+
+                    } else {
+                        aggregatedTableContainerDiv.innerHTML = '<p>Tidak ada data produk yang dapat ditampilkan.</p>';
+                        if (quantityCanvas) quantityCanvas.style.display = 'none';
+                        if (priceCanvas) priceCanvas.style.display = 'none';
+                        if (document.querySelector('.charts-row-container')) document.querySelector('.charts-row-container').style.display = 'none';
+                    }
+                },
+                (error) => {
+                    loadingMessageDiv.style.display = 'none';
+                    errorMessageDiv.style.display = 'block';
+                    errorMessageDiv.querySelector('p').textContent = 'Gagal memuat data dari Firebase. Detail: ' + error.message;
+                    console.error("Error mengambil data dari Firebase:", error);
+                    if (mostSoldProductValueEl) mostSoldProductValueEl.textContent = '-';
+                    if (totalRevenueValueEl) totalRevenueValueEl.textContent = 'Rp 0';
+                    if (totalQuantityValueEl) totalQuantityValueEl.textContent = '0';
+                }
+            );
+        } // Akhir dari blok 'else' untuk autentikasi
+    </script>
+</body>
+
+</html>

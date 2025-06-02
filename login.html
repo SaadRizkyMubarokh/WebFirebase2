@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dasbor Analisis Produk</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            background-color: #1e1e1e;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: #f5f5f5;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .login-form .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .login-form label {
+            display: block;
+            color: #c7c7c7;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .login-form input[type="email"],
+        .login-form input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-form input[type="email"]:focus,
+        .login-form input[type="password"]:focus {
+            outline: none;
+            border-color: #bb86fc;
+            box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.25);
+        }
+
+        .login-form .login-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-form .login-button:hover {
+            background-color: #a775e8;
+        }
+        
+        .error-message {
+            color: #ff7b7b; /* Warna merah untuk pesan error */
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            min-height: 1.2em; /* Beri ruang agar layout tidak bergeser */
+        }
+
+        .login-links {
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+
+        .login-links a {
+            color: #bb86fc;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 25px 20px;
+            }
+            .login-container h2 {
+                font-size: 1.6em;
+            }
+            .login-form input[type="email"],
+            .login-form input[type="password"] {
+                padding: 10px 12px;
+                font-size: 0.95em;
+            }
+            .login-form .login-button {
+                font-size: 1em;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Login Akun</h2>
+        <p id="loginErrorMessage" class="error-message"></p>
+        <form id="loginForm" class="login-form">
+            <div class="input-group">
+                <label for="email">Alamat Email</label>
+                <input type="email" id="email" name="email" required placeholder="account@gmail.com">
+            </div>
+            <div class="input-group">
+                <label for="password">Kata Sandi</label>
+                <input type="password" id="password" name="password" required placeholder="password">
+            </div>
+            <button type="submit" class="login-button">Masuk</button>
+        </form>
+        <div class="login-links">
+            <a href="#">Lupa Kata Sandi?</a>
+            <span>|</span>
+            <a href="#">Buat Akun Baru</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Jika pengguna sudah login, langsung arahkan ke produkX.html
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                window.location.href = 'produk.html';
+                return; // Hentikan eksekusi script lebih lanjut di halaman login
+            }
+
+            const loginForm = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const errorMessageElement = document.getElementById('loginErrorMessage');
+
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    errorMessageElement.textContent = ''; // Bersihkan pesan error sebelumnya
+
+                    const email = emailInput.value.trim();
+                    const password = passwordInput.value.trim();
+
+                    // Kredensial yang diharapkan
+                    const expectedEmail = 'admin@gmail.com';
+                    const expectedPassword = 'adminonly';
+
+                    if (email === expectedEmail && password === expectedPassword) {
+                        // Simpan status login di sessionStorage
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        // Arahkan ke halaman produkX.html
+                        window.location.href = 'produk.html';
+                    } else {
+                        errorMessageElement.textContent = 'Email atau kata sandi salah.';
+                        passwordInput.value = ''; // Kosongkan field password
+                        emailInput.focus(); // Fokus kembali ke field email
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

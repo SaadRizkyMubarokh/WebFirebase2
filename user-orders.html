@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Pesanan Pengguna - Dasbor Analisis Produk</title>
+    <script>
+        // ==== Pemeriksaan Autentikasi ====
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        // ===================================
+    </script>
+    <style>
+        :root {
+            --primary-bg-color: #121212;
+            --secondary-bg-color: #1e1e1e;
+            --primary-text-color: #e0e0e0;
+            --secondary-text-color: #c5c5c5;
+            --accent-color-1: #bb86fc;
+            --accent-color-2: #03dac6;
+            --border-color-light: #333;
+            --border-color-medium: #444;
+            --border-color-dark: #555;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: var(--primary-bg-color);
+            color: var(--primary-text-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.6em;
+        }
+
+        .hamburger-menu {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #f5f5f5;
+            margin: 5px 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .hamburger-menu.is-active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .hamburger-menu.is-active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.is-active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        header nav {
+            display: flex;
+        }
+
+        header nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        header nav ul li {
+            margin-left: 20px;
+        }
+
+        header nav ul li a {
+            color: #f5f5f5;
+            text-decoration: none;
+            font-size: 0.95em;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header nav ul li a:hover,
+        header nav ul li a.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .main-content {
+            padding: 20px;
+            margin-top: 10px;
+            flex: 1;
+        }
+
+        h2.section-title {
+            color: var(--primary-text-color);
+            border-bottom: 1px solid var(--border-color-medium);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--secondary-bg-color);
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: grid;
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            align-items: start; 
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .order-summary-card {
+            width: calc(50% - 10px); 
+        }
+
+        .order-summary-card h3 {
+            font-size: 1.1em;
+            color: var(--accent-color-2);
+            margin-top: 0;
+            grid-column: 1 / -1; 
+        }
+
+        .order-summary-card p {
+            font-size: 0.9em;
+            margin: 5px 0;
+            color: var(--secondary-text-color);
+        }
+
+        .order-detail-view {
+            background-color: var(--secondary-bg-color);
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%; 
+        }
+
+        .order-detail-view h2.detail-title {
+            font-size: 1.2em;
+            color: var(--accent-color-1);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color-medium);
+            padding-bottom: 10px;
+        }
+
+        .order-info p,
+        .item-info p {
+            font-size: 0.9em;
+            margin: 8px 0;
+            color: var(--secondary-text-color);
+        }
+
+        .order-info strong,
+        .item-info strong {
+            color: var(--primary-text-color);
+        }
+
+        .items-section {
+            margin-top: 20px;
+            border-top: 1px dashed var(--border-color-dark);
+            padding-top: 15px;
+        }
+
+        .items-section h3 {
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--primary-text-color);
+        }
+
+        .item {
+            border-bottom: 1px solid var(--border-color-medium);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .item img {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 4px;
+            margin-right: 15px;
+            border: 1px solid var(--border-color-light);
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .button-navigation { /* Container for navigation buttons */
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px; /* Space between buttons if both are visible */
+            align-items: center;
+        }
+
+        .back-button, .page-nav-button { /* Common styles for navigation buttons */
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+
+        .back-button { /* Specific for detail -> list navigation */
+            background-color: var(--accent-color-1);
+            color: var(--primary-bg-color);
+            display: none; 
+        }
+        .back-button:hover {
+            background-color: #a775e8;
+        }
+
+        .page-nav-button { /* Specific for user-orders.html -> Transaksi.html */
+            background-color: var(--accent-color-2);
+            color: var(--primary-bg-color);
+        }
+        .page-nav-button:hover {
+            background-color: #02bfae;
+        }
+
+
+        #loadingMessage,
+        #noOrdersMessage,
+        #errorMessage {
+            font-size: 1.1em;
+            color: #aaaaaa;
+            text-align: center;
+            width: 100%;
+            padding: 20px 0;
+        }
+        .count-info {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Responsive Styles - adjust as needed */
+        @media (max-width: 992px) {
+            .order-summary-card {
+                width: calc(50% - 10px);
+            }
+        }
+        @media (max-width: 768px) {
+            header h1 {font-size: 1.4em;}
+            .hamburger-menu {display: block;}
+            header nav#mainNav {
+                display: none; position: absolute; top: 100%; left: 0; width: 100%;
+                background-color: #1e1e1e; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-top: 1px solid #333;
+            }
+            header nav#mainNav.mobile-menu-open { display: flex; }
+            header nav#mainNav ul { flex-direction: column; width: 100%; }
+            header nav#mainNav ul li { margin-left: 0; text-align: center; border-bottom: 1px solid #333; }
+            header nav#mainNav ul li:last-child { border-bottom: none; }
+            header nav#mainNav ul li a { display: block; padding: 15px; font-size: 1em; }
+
+            .order-summary-card {
+                width: 100%;
+            }
+             .card { 
+                grid-template-columns: 1fr;
+            }
+            .main-content {padding: 15px;}
+            .button-navigation {
+                flex-direction: column; /* Stack buttons on smaller screens */
+                align-items: flex-start;
+            }
+            .back-button, .page-nav-button {
+                width: 100%; /* Make buttons full width */
+                text-align: center;
+            }
+        }
+         @media (max-width: 520px) {
+            header h1 {font-size: 1.2em;}
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Dasbor Analisis Produk</h1>
+        <button class="hamburger-menu" aria-label="Toggle menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav id="mainNav">
+            <ul>
+                <li><a href="produk.html" id="menuPenjualan">Penjualan</a></li>
+                <li><a href="Transaksi.html" id="menuTransaksi" class="active">Transaksi</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <div class="button-navigation">
+            <button id="backToTransaksiPageButton" class="page-nav-button">Kembali ke Daftar Transaksi</button>
+            <button id="backButton" class="back-button">Kembali ke Daftar Pesanan</button> 
+        </div>
+        <h2 id="pageTitle" class="section-title">Memuat Pesanan Pengguna...</h2>
+
+        <div id="loadingMessage">
+            <p>Memuat data pesanan...</p>
+        </div>
+        <div id="noOrdersMessage" style="display:none;">
+            <p>Tidak ada pesanan selesai untuk pengguna ini.</p>
+        </div>
+        <div id="errorMessage" style="display:none;">
+            <p>Gagal memuat data. Silakan cek konsol atau pengguna tidak ditemukan.</p>
+        </div>
+
+        <div id="orderListContainer" class="container"></div>
+        <div id="orderDetailContainer" style="display:none;"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        // ==== Pemeriksaan Autentikasi ====
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        } else {
+            const firebaseConfig = { 
+                apiKey: "AIzaSyB7lVEbglO96ZjO-fYIqHcIlblaXHHx7eE",
+                authDomain: "kevlev.firebaseapp.com",
+                databaseURL: "https://kevlev-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "kevlev",
+                storageBucket: "kevlev.firebasestorage.app",
+                messagingSenderId: "229462752783",
+                appId: "1:229462752783:web:0dca277aa84e098a402d7a",
+                measurementId: "G-5E2GC9Q9D7"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            const adminOrdersRef = database.ref('Admin/ProductOrder');
+
+            const orderListContainerDiv = document.getElementById('orderListContainer');
+            const orderDetailContainerDiv = document.getElementById('orderDetailContainer');
+            const loadingMessageDiv = document.getElementById('loadingMessage');
+            const noOrdersMessageDiv = document.getElementById('noOrdersMessage');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const pageTitle = document.getElementById('pageTitle');
+            const backButton = document.getElementById('backButton'); // For detail -> list
+            const backToTransaksiPageButton = document.getElementById('backToTransaksiPageButton'); // For user-orders.html -> Transaksi.html
+
+            let userEmailKeyFromUrl = null;
+            let allUserOrdersData = null; 
+            let selectedOrderDataForDetail = null;
+            let currentOrderNameKeyForDetailPage = null;
+
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const hamburgerButton = document.querySelector('.hamburger-menu');
+                const mainNav = document.getElementById('mainNav'); 
+
+                if (hamburgerButton && mainNav) {
+                    hamburgerButton.addEventListener('click', () => {
+                        mainNav.classList.toggle('mobile-menu-open'); 
+                        const isExpanded = mainNav.classList.contains('mobile-menu-open');
+                        hamburgerButton.setAttribute('aria-expanded', isExpanded);
+                        hamburgerButton.classList.toggle('is-active'); 
+                    });
+                }
+                document.getElementById('menuTransaksi')?.classList.add('active');
+                document.getElementById('menuPenjualan')?.classList.remove('active');
+
+
+                const params = new URLSearchParams(window.location.search);
+                userEmailKeyFromUrl = params.get('user');
+
+                if (!userEmailKeyFromUrl) {
+                    pageTitle.textContent = 'Pengguna tidak ditemukan';
+                    loadingMessageDiv.style.display = 'none';
+                    errorMessageDiv.innerHTML = '<p>Parameter pengguna tidak ada di URL. Kembali ke <a href="Transaksi.html">halaman transaksi</a>.</p>';
+                    errorMessageDiv.style.display = 'block';
+                    backToTransaksiPageButton.style.display = 'block'; // Allow going back
+                    return;
+                }
+                pageTitle.textContent = `Pesanan untuk ${userEmailKeyFromUrl.replace(",", ".")}`;
+                fetchAndDisplayUserOrders();
+
+                // Event listener for the new button to go back to Transaksi.html
+                if(backToTransaksiPageButton) {
+                    backToTransaksiPageButton.addEventListener('click', () => {
+                        window.location.href = 'Transaksi.html';
+                    });
+                }
+            });
+            
+            const currencyFormatter = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            });
+
+            function showOrderDetailView(showDetail) {
+                if (showDetail) {
+                    orderListContainerDiv.style.display = 'none';
+                    orderDetailContainerDiv.style.display = 'block';
+                    backButton.style.display = 'block'; // Show button for detail -> list
+                    pageTitle.textContent = `Detail Pesanan #${selectedOrderDataForDetail.Info.orderId || 'N/A'}`;
+                } else {
+                    orderListContainerDiv.style.display = 'flex';
+                    orderDetailContainerDiv.style.display = 'none';
+                    backButton.style.display = 'none'; 
+                    pageTitle.textContent = `Pesanan untuk ${userEmailKeyFromUrl.replace(",", ".")}`;
+                }
+            }
+            
+            backButton.addEventListener('click', () => { // This is for detail -> list
+                showOrderDetailView(false); 
+            });
+
+            function displayOrderList(userSpecificCompletedOrders) {
+                orderListContainerDiv.innerHTML = '';
+                loadingMessageDiv.style.display = 'none';
+
+                if (Object.keys(userSpecificCompletedOrders).length === 0) {
+                    noOrdersMessageDiv.style.display = 'block';
+                    return;
+                }
+                noOrdersMessageDiv.style.display = 'none';
+
+                for (const orderNameKey in userSpecificCompletedOrders) {
+                    const orderData = userSpecificCompletedOrders[orderNameKey];
+                    const orderInfo = orderData.Info;
+                    let itemsCountInOrder = 0;
+                    for (const itemKey in orderData) {
+                        if (orderData.hasOwnProperty(itemKey) && itemKey !== "Info") {
+                            itemsCountInOrder++;
+                        }
+                    }
+
+                    const orderSummaryCard = document.createElement('div');
+                    orderSummaryCard.classList.add('card', 'order-summary-card');
+                    orderSummaryCard.innerHTML = `
+                        <h3>Pesanan: ${orderNameKey} (ID: ${orderInfo.orderId || 'N/A'})</h3>
+                        <p><strong>Waktu Pembayaran:</strong> ${orderInfo.paymentTime || 'N/A'}</p>
+                        <p><strong>Total Pembayaran:</strong> ${orderInfo.totalPayment ? currencyFormatter.format(parseInt(String(orderInfo.totalPayment).replace(/[^0-9]/g, ''), 10) || 0) : 'N/A'}</p>
+                        <p class="count-info">Jumlah Jenis Item: ${itemsCountInOrder}</p>
+                    `;
+                    orderSummaryCard.addEventListener('click', () => {
+                        selectedOrderDataForDetail = orderData;
+                        currentOrderNameKeyForDetailPage = orderNameKey;
+                        displayOrderDetailContent();
+                    });
+                    orderListContainerDiv.appendChild(orderSummaryCard);
+                }
+                showOrderDetailView(false); 
+            }
+
+            function displayOrderDetailContent() {
+                const orderData = selectedOrderDataForDetail;
+                const orderInfo = orderData.Info;
+                orderDetailContainerDiv.innerHTML = '';
+
+                let orderHtml = `<div class="order-detail-view">`;
+                orderHtml += `<h2 class="detail-title">Pesanan #${orderInfo.orderId || 'N/A'} (${currentOrderNameKeyForDetailPage || 'Detail'})</h2>`;
+                orderHtml += `<div class="order-info">`;
+                orderHtml += `<p><strong>Email:</strong> ${orderInfo.email ? orderInfo.email.replace(",", ".") : userEmailKeyFromUrl.replace(",",".")}</p>`;
+                orderHtml += `<p><strong>Alamat:</strong> ${orderInfo.address || 'N/A'}</p>`;
+                orderHtml += `<p><strong>Metode Pembayaran:</strong> ${orderInfo.paymentMethod || 'N/A'}</p>`;
+                orderHtml += `<p><strong>Waktu Pembayaran:</strong> ${orderInfo.paymentTime || 'N/A'}</p>`;
+                orderHtml += `<p><strong>Subtotal Produk:</strong> ${orderInfo.subTotalProduct ? currencyFormatter.format(parseInt(String(orderInfo.subTotalProduct).replace(/[^0-9]/g, ''), 10) || 0) : 'N/A'}</p>`;
+                orderHtml += `<p><strong>Subtotal Pengiriman:</strong> ${orderInfo.subTotalDelivery ? currencyFormatter.format(parseInt(String(orderInfo.subTotalDelivery).replace(/[^0-9]/g, ''), 10) || 0) : 'N/A'}</p>`;
+                orderHtml += `<p><strong>Total Pembayaran:</strong> ${orderInfo.totalPayment ? currencyFormatter.format(parseInt(String(orderInfo.totalPayment).replace(/[^0-9]/g, ''), 10) || 0) : 'N/A'}</p>`;
+                orderHtml += `</div>`;
+
+                orderHtml += `<div class="items-section"><h3>Item Produk:</h3>`;
+                let itemsCountInOrder = 0;
+                for (const itemKey in orderData) {
+                    if (orderData.hasOwnProperty(itemKey) && itemKey !== "Info") {
+                        itemsCountInOrder++;
+                        const item = orderData[itemKey];
+                        orderHtml += `<div class="item">`;
+                        if (item.image) {
+                            orderHtml += `<img src="${item.image}" alt="${item.title || 'Gambar Produk'}">`;
+                        }
+                        orderHtml += `<div class="item-details">`;
+                        orderHtml += `<p><strong>${item.title || 'Tanpa Judul'}</strong></p>`;
+                        orderHtml += `<p>Jumlah: ${item.count || 'N/A'}</p>`;
+                        orderHtml += `<p>Harga Item: ${item.totalPrice ? currencyFormatter.format(parseInt(String(item.totalPrice).replace(/[^0-9]/g, ''), 10) || 0) : 'N/A'}</p>`;
+                        orderHtml += `</div></div>`;
+                    }
+                }
+                orderHtml += `</div>`;
+                 orderHtml += `<p style="margin-top:15px; font-size:0.9em; color: #aaaaaa;">Jumlah Jenis Item: ${itemsCountInOrder}</p>`;
+                orderHtml += `</div>`;
+
+                orderDetailContainerDiv.innerHTML = orderHtml;
+                showOrderDetailView(true); 
+            }
+            
+            function fetchAndDisplayUserOrders() {
+                adminOrdersRef.on('value', (snapshot) => {
+                    loadingMessageDiv.style.display = 'block';
+                    errorMessageDiv.style.display = 'none';
+                    noOrdersMessageDiv.style.display = 'none';
+                    orderListContainerDiv.innerHTML = ''; 
+                    orderDetailContainerDiv.style.display = 'none'; 
+
+                    if (snapshot.exists()) {
+                        const allData = snapshot.val();
+                        const userSpecificOrders = allData[userEmailKeyFromUrl];
+                        
+                        if (userSpecificOrders) {
+                            let completedOrdersForThisUser = {};
+                            let hasCompletedOrder = false;
+                            for (const orderNameKey in userSpecificOrders) {
+                                if (userSpecificOrders.hasOwnProperty(orderNameKey)) {
+                                    const orderData = userSpecificOrders[orderNameKey];
+                                    if (orderData && orderData.Info && orderData.Info.statusOrder === "Selesai") {
+                                        orderData.Info.orderNameKey = orderNameKey; 
+                                        completedOrdersForThisUser[orderNameKey] = orderData;
+                                        hasCompletedOrder = true;
+                                    }
+                                }
+                            }
+                            allUserOrdersData = completedOrdersForThisUser; 
+
+                            if (hasCompletedOrder) {
+                                if (orderDetailContainerDiv.style.display === 'block' && 
+                                    currentOrderNameKeyForDetailPage && 
+                                    allUserOrdersData[currentOrderNameKeyForDetailPage]) {
+                                    selectedOrderDataForDetail = allUserOrdersData[currentOrderNameKeyForDetailPage];
+                                    displayOrderDetailContent();
+                                } else { 
+                                    displayOrderList(allUserOrdersData);
+                                }
+                            } else {
+                                loadingMessageDiv.style.display = 'none';
+                                noOrdersMessageDiv.style.display = 'block';
+                            }
+                        } else {
+                            loadingMessageDiv.style.display = 'none';
+                            errorMessageDiv.innerHTML = `<p>Tidak ada data pesanan ditemukan untuk pengguna: ${userEmailKeyFromUrl.replace(",", ".")}</p>`;
+                            errorMessageDiv.style.display = 'block';
+                        }
+                    } else {
+                        loadingMessageDiv.style.display = 'none';
+                        errorMessageDiv.innerHTML = '<p>Tidak ada data pesanan di database.</p>';
+                        errorMessageDiv.style.display = 'block';
+                        console.log("Tidak ada data pada path Admin/ProductOrder");
+                    }
+                }, (error) => {
+                    loadingMessageDiv.style.display = 'none';
+                    errorMessageDiv.innerHTML = `<p>Gagal mengambil data: ${error.message}</p>`;
+                    errorMessageDiv.style.display = 'block';
+                    console.error("Error mengambil data dari Firebase:", error);
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
